@@ -2,21 +2,37 @@ from flask import Flask, request, jsonify, send_from_directory
 import torch
 from transformers import XLMRobertaTokenizerFast, XLMRobertaForQuestionAnswering
 from context_handler import ContextHandler
+import gdown
+import zipfile
+import os
 
 app = Flask(__name__)
 
-# Load model and tokenizer from saved paths
-model_save_path = './model'
-tokenizer_save_path = './tokenizer'
-squad_path = './squad.json'
+# Link Google Drive ID của mô hình và tokenizer
+MODEL_URL = 'https://drive.google.com/drive/folders/1-6Dd1DNUAtHaLIoiEB5OT7eEoplhXF6Z?usp=drive_link'
+TOKENIZER_URL = 'https://drive.google.com/drive/folders/1-G-YgQiAQ8hcKThj9Pi6FL6VDpjujE3W?usp=drive_link'
 
-# Load the tokenizer and model
-tokenizer = XLMRobertaTokenizerFast.from_pretrained(tokenizer_save_path)
-model = XLMRobertaForQuestionAnswering.from_pretrained(model_save_path)
+# Đường dẫn lưu mô hình và tokenizer
+model_path = './model'
+tokenizer_path = './tokenizer'
+
+# Tải mô hình và tokenizer nếu chưa có
+if not os.path.exists(f'{model_path}/pytorch_model.bin'):
+    gdown.download(MODEL_URL, f'{model_path}/pytorch_model.bin', quiet=False)
+
+if not os.path.exists(f'{tokenizer_path}/tokenizer.json'):
+    gdown.download(TOKENIZER_URL, f'{tokenizer_path}/tokenizer.zip', quiet=False)
+    with zipfile.ZipFile(f'{tokenizer_path}/tokenizer.zip', 'r') as zip_ref:
+        zip_ref.extractall(tokenizer_path)
+
+# Load model and tokenizer from saved paths
+tokenizer = XLMRobertaTokenizerFast.from_pretrained(tokenizer_path)
+model = XLMRobertaForQuestionAnswering.from_pretrained(model_path)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 model.to(device)
 
 # Load ContextHandler
+squad_path = './squad.json'
 context_handler = ContextHandler(squad_path)
 
 def get_prediction(question):
