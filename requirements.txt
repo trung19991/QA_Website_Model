@@ -3,4 +3,3 @@ torch==2.3.1  # Phiên bản mới nhất thay thế phiên bản không khả d
 transformers==4.15.0
 sentence-transformers==2.1.0
 gdown==4.2.0
-gunicorn==20.1.0
